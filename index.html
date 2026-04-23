@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Smart Water Dispenser — Interactive Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;600;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:       #050D1A;
+    --panel:    #091220;
+    --border:   #0D2D4A;
+    --accent:   #00D4FF;
+    --accent2:  #00FF9D;
+    --warn:     #FF6B35;
+    --text:     #C8E6F5;
+    --dim:      #3A5A72;
+    --water:    #1A6EFF;
+    --water2:   #00BFFF;
+    --relay-on: #00FF9D;
+    --relay-off:#1A3A2A;
+    --glow: 0 0 20px rgba(0,212,255,0.4);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(0,60,120,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(0,100,80,0.1) 0%, transparent 60%);
+  }
+
+  /* ── Header ─────────────────────────── */
+  header {
+    padding: 24px 40px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .logo-mark {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  header h1 {
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: 0.05em;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header p { font-size: 12px; color: var(--dim); font-family: 'Share Tech Mono', monospace; }
+  .badge {
+    margin-left: auto;
+    padding: 4px 12px;
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    animation: pulse-badge 2s ease-in-out infinite;
+  }
+  @keyframes pulse-badge {
+    0%,100%{ box-shadow: 0 0 6px rgba(0,212,255,0.3); }
+    50%{ box-shadow: 0 0 16px rgba(0,212,255,0.7); }
+  }
+
+  /* ── Layout ─────────────────────────── */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 420px 1fr;
+    gap: 24px;
+    padding: 28px 32px;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+
+  /* ── Panel ─────────────────────────── */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .panel::before {
+    content:'';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.6;
+  }
+  .panel-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--dim);
+    font-family: 'Share Tech Mono', monospace;
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel-title::before { content:''; display: block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
+
+  /* ── CENTER — Dispenser ─────────────── */
+  .dispenser-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* Machine body */
+  .machine {
+    width: 280px;
+    background: linear-gradient(180deg, #0B1E30 0%, #071525 100%);
+    border: 2px solid #1A3A55;
+    border-radius: 24px 24px 10px 10px;
+    padding: 24px 20px 20px;
+    position: relative;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  /* Brand strip */
+  .machine-brand {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--dim);
+    margin-bottom: 16px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* Water tank visual */
+  .tank {
+    width: 100%;
+    height: 140px;
+    background: rgba(0,30,60,0.6);
+    border: 1.5px solid #0D3055;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .tank-water {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(0deg, #0044CC, #1A6EFF 60%, #00BFFF);
+    border-radius: 0 0 8px 8px;
+    transition: height 0.3s ease;
+    height: 80%;
+  }
+  .tank-wave {
+    position: absolute;
+    top: -8px; left: -20px;
+    width: calc(100% + 40px);
+    height: 20px;
+    background: #1E88E5;
+    border-radius: 50%;
+    animation: wave 2s ease-in-out infinite;
+  }
+  @keyframes wave { 0%,100%{transform:translateX(0) scaleY(1)} 50%{transform:translateX(10px) scaleY(1.1)} }
+  .tank-label {
+    position: absolute;
+    top: 8px; right: 10px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .tank-fill-pct {
+    position: absolute;
+    top: 8px; left: 10px;
+    font-size: 11px;
+    color: var(--water2);
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: bold;
+  }
+
+  /* Nozzle */
+  .nozzle-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+  .nozzle-pipe {
+    width: 30px; height: 30px;
+    background: linear-gradient(180deg, #112233, #0D1E30);
+    border: 1.5px solid #1A3A55;
+    border-radius: 4px;
+    position: relative;
+  }
+  .water-stream {
+    width: 6px;
+    height: 0;
+    background: linear-gradient(180deg, var(--water2), rgba(0,191,255,0));
+    border-radius: 3px;
+    margin: 0 auto;
+    transition: height 0.2s ease;
+    animation: stream-wobble 0.1s ease-in-out infinite;
+  }
+  .water-stream.flowing {
+    height: 60px;
+  }
+  @keyframes stream-wobble { 0%,100%{width:5px} 50%{width:7px} }
+
+  /* Glass / cup */
+  .cup {
+    width: 60px; height: 50px;
+    border: 2.5px solid #1A3A55;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .cup.present { border-color: var(--accent2); }
+  .cup-water {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(0deg, #0055EE, #1A6EFF);
+    height: 0%;
+    transition: height 0.3s ease;
+    border-radius: 0 0 7px 7px;
+  }
+  .cup-label {
+    text-align: center;
+    font-size: 9px;
+    color: var(--dim);
+    font-family: 'Share Tech Mono', monospace;
+    margin-top: 4px;
+  }
+
+  /* Touch button */
+  .touch-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #091A2E, #061220);
+    border: 1.5px solid var(--accent);
+    border-radius: 10px;
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.15s;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .touch-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .touch-btn:active::after, .touch-btn.tapped::after { opacity: 0.12; }
+  .touch-btn:hover { box-shadow: var(--glow); }
+  .touch-hint {
+    font-size: 10px;
+    color: var(--dim);
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    margin-top: 6px;
+  }
+
+  /* IR toggle */
+  .ir-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,100,80,0.07);
+    border: 1px solid #0D2D22;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .ir-row:hover { border-color: var(--accent2); }
+  .ir-label { font-size: 12px; color: var(--text); }
+  .ir-sublabel { font-size: 10px; color: var(--dim); font-family: 'Share Tech Mono', monospace; }
+  .ir-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--relay-off);
+    border: 1.5px solid #0D2D22;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+  .ir-dot.active {
+    background: var(--accent2);
+    box-shadow: 0 0 12px var(--accent2);
+  }
+
+  /* ── LEFT — Controls & State ─────────── */
+  .state-display {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+  .state-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .state-line:last-child { border-bottom: none; }
+  .state-key { color: var(--dim); }
+  .state-val { color: var(--accent2); font-weight: bold; }
+  .state-val.idle    { color: var(--dim); }
+  .state-val.running { color: var(--warn); }
+  .state-val.cooldown{ color: #FF9800; }
+
+  /* Progress bar */
+  .progress-wrap {
+    margin: 16px 0;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--dim);
+    font-family: 'Share Tech Mono', monospace;
+    margin-bottom: 6px;
+  }
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.2s linear;
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* Relay indicator */
+  .relay-indicator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    transition: border-color 0.3s;
+  }
+  .relay-indicator.on { border-color: var(--relay-on); }
+  .relay-led {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--relay-off);
+    border: 2px solid #0D2A1E;
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+  .relay-led.on {
+    background: var(--relay-on);
+    box-shadow: 0 0 16px var(--relay-on);
+  }
+  .relay-text { font-size: 12px; font-family: 'Share Tech Mono', monospace; }
+  .relay-text span { color: var(--dim); font-size: 10px; display: block; }
+
+  /* Volume selector */
+  .vol-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .vol-card {
+    padding: 14px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(0,0,0,0.2);
+  }
+  .vol-card:hover { border-color: var(--accent); }
+  .vol-card.active {
+    border-color: var(--accent2);
+    background: rgba(0,255,157,0.06);
+    box-shadow: 0 0 16px rgba(0,255,157,0.15);
+  }
+  .vol-ml { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .vol-card.active .vol-ml { color: var(--accent2); }
+  .vol-sub { font-size: 9px; color: var(--dim); font-family: 'Share Tech Mono', monospace; margin-top: 2px; }
+  .vol-badge { font-size: 9px; color: var(--accent); margin-top: 4px; font-family: 'Share Tech Mono', monospace; }
+
+  /* ── RIGHT — Serial Log ─────────────── */
+  .serial-log {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    height: 320px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+  .serial-log::-webkit-scrollbar { width: 4px; }
+  .serial-log::-webkit-scrollbar-track { background: transparent; }
+  .serial-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .log-line { display: flex; gap: 10px; animation: fade-in 0.2s ease; }
+  @keyframes fade-in { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+  .log-time { color: var(--dim); flex-shrink: 0; }
+  .log-msg  { color: var(--text); }
+  .log-msg.pump   { color: var(--warn); }
+  .log-msg.state  { color: var(--accent); }
+  .log-msg.dispense{ color: var(--accent2); }
+  .log-msg.ir     { color: #CE93D8; }
+  .log-msg.touch  { color: #F48FB1; }
+  .log-msg.system { color: var(--dim); }
+
+  /* Stats row */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .stat-card {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+  }
+  .stat-val {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .stat-label { font-size: 9px; color: var(--dim); margin-top: 2px; }
+
+  /* Timing strip */
+  .timing-strip {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .timing-pill {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    border: 1px solid;
+  }
+  .tp-blue  { color: var(--accent);  border-color: rgba(0,212,255,0.3);  background: rgba(0,212,255,0.06); }
+  .tp-green { color: var(--accent2); border-color: rgba(0,255,157,0.3);  background: rgba(0,255,157,0.06); }
+  .tp-warn  { color: var(--warn);    border-color: rgba(255,107,53,0.3);  background: rgba(255,107,53,0.06); }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--dim);
+    font-family: 'Share Tech Mono', monospace;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  /* Ripple */
+  .ripple-container { position: fixed; pointer-events: none; inset: 0; z-index: 9999; }
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,212,255,0.3), transparent);
+    transform: scale(0);
+    animation: ripple-out 0.5s ease-out forwards;
+    pointer-events: none;
+  }
+  @keyframes ripple-out { to { transform: scale(4); opacity: 0; } }
+</style>
+</head>
+<body>
+
+<div class="ripple-container" id="rippleContainer"></div>
+
+<header>
+  <div class="logo-mark">💧</div>
+  <div>
+    <h1>SMART WATER DISPENSER</h1>
+    <p>ESP32 · Relay Module · IR Proximity · Capacitive Touch — Interactive Simulator</p>
+  </div>
+  <div class="badge" id="systemBadge">● SYSTEM READY</div>
+</header>
+
+<div class="main">
+
+  <!-- LEFT PANEL -->
+  <div>
+    <div class="panel">
+      <div class="panel-title">System State</div>
+
+      <div class="state-display">
+        <div class="state-line">
+          <span class="state-key">STATE</span>
+          <span class="state-val idle" id="stateLabel">IDLE</span>
+        </div>
+        <div class="state-line">
+          <span class="state-key">VOLUME</span>
+          <span class="state-val" id="volumeLabel">— mL</span>
+        </div>
+        <div class="state-line">
+          <span class="state-key">ELAPSED</span>
+          <span class="state-val" id="elapsedLabel">0.0 s</span>
+        </div>
+        <div class="state-line">
+          <span class="state-key">REMAINING</span>
+          <span class="state-val" id="remainLabel">— ms</span>
+        </div>
+      </div>
+
+      <div class="relay-indicator" id="relayIndicator">
+        <div class="relay-led" id="relayLed"></div>
+        <div class="relay-text">
+          RELAY MODULE
+          <span id="relayStatus">GPIO 26 → LOW → Pump OFF</span>
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>DISPENSE PROGRESS</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <div class="panel-title" style="margin-top:8px">Select Mode</div>
+      <div class="vol-selector">
+        <div class="vol-card active" id="card300" onclick="selectMode(300)">
+          <div class="vol-ml">300</div>
+          <div class="vol-sub">millilitres</div>
+          <div class="vol-badge">1× TAP</div>
+        </div>
+        <div class="vol-card" id="card1000" onclick="selectMode(1000)">
+          <div class="vol-ml">1000</div>
+          <div class="vol-sub">millilitres</div>
+          <div class="vol-badge">2× TAP</div>
+        </div>
+      </div>
+
+      <div class="timing-strip">
+        <div class="timing-pill tp-blue">300 mL = 5 700 ms</div>
+        <div class="timing-pill tp-green">1 L = 19 000 ms</div>
+        <div class="timing-pill tp-warn">Cooldown: 5 000 ms</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER — Dispenser -->
+  <div class="dispenser-wrap">
+    <div class="machine">
+      <div class="machine-brand">AQUAFLOW · ESP32 v1.0</div>
+
+      <!-- Tank -->
+      <div class="tank" id="tank">
+        <div class="tank-water" id="tankWater">
+          <div class="tank-wave"></div>
+        </div>
+        <div class="tank-fill-pct" id="tankPct">80%</div>
+        <div class="tank-label">RESERVOIR</div>
+      </div>
+
+      <!-- Nozzle + stream -->
+      <div class="nozzle-section">
+        <div class="nozzle-pipe"></div>
+        <div class="water-stream" id="waterStream"></div>
+        <div class="cup" id="cupEl">
+          <div class="cup-water" id="cupWater"></div>
+        </div>
+        <div class="cup-label" id="cupLabel">Cup / Glass</div>
+      </div>
+
+      <!-- Touch Button -->
+      <button class="touch-btn" id="touchBtn" onclick="handleTouch(event)">
+        ⚡ TOUCH SENSOR
+      </button>
+      <div class="touch-hint" id="touchHint">TAP ONCE = 300 mL · TAP TWICE = 1 L</div>
+    </div>
+
+    <!-- IR Toggle -->
+    <div style="width:280px">
+      <div class="ir-row" onclick="toggleIR()">
+        <div>
+          <div class="ir-label">IR Proximity Sensor</div>
+          <div class="ir-sublabel">GPIO 14 · FC-51 · Active LOW</div>
+        </div>
+        <div class="ir-dot" id="irDot"></div>
+      </div>
+      <div style="font-size:10px;color:var(--dim);margin-top:6px;font-family:'Share Tech Mono',monospace;text-align:center;" id="irHint">
+        Click to simulate cup/glass presence (auto 300 mL)
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" style="width:280px">
+      <div class="stat-card">
+        <div class="stat-val" id="statTotal">0</div>
+        <div class="stat-label">TOTAL mL</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statDispenses">0</div>
+        <div class="stat-label">DISPENSES</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statCups">0</div>
+        <div class="stat-label">CUPS EST.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT — Serial Log -->
+  <div>
+    <div class="panel">
+      <div class="panel-title">Serial Monitor · 115200 baud</div>
+      <div class="serial-log" id="serialLog"></div>
+      <div style="margin-top:12px;display:flex;gap:10px;">
+        <button onclick="clearLog()" style="flex:1;padding:8px;background:transparent;border:1px solid var(--border);color:var(--dim);border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:11px;cursor:pointer;">CLR LOG</button>
+        <button onclick="resetSim()" style="flex:1;padding:8px;background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:11px;cursor:pointer;">↺ RESET</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Smart Water Dispenser · ESP32 · <a href="https://github.com" target="_blank">GitHub</a> · MIT License · Pump: 1 L / 19 s · Touch: GPIO4 · IR: GPIO14 · Relay: GPIO26
+</footer>
+
+<script>
+// ─── Constants ───────────────────────────────────────────
+const ML_PER_MS        = 1000 / 19000;
+const DURATION_300     = Math.round(300 / ML_PER_MS);   // 5700ms
+const DURATION_1000    = 19000;
+const DOUBLE_TAP_WIN   = 500;
+const IR_STABLE_MS     = 800;
+const COOLDOWN_MS      = 5000;
+
+// ─── State ───────────────────────────────────────────────
+let state          = 'IDLE';       // IDLE / WAIT_SECOND / DISPENSING / COOLDOWN
+let dispenseStart  = 0;
+let dispenseEnd    = 0;
+let dispenseVol    = 0;
+let stateEnteredAt = 0;
+let lastTouchTime  = 0;
+let irPresent      = false;
+let irSinceMs      = 0;
+let irTimer        = null;
+let rafHandle      = null;
+
+// Stats
+let totalMl    = 0;
+let dispenses  = 0;
+let tankPct    = 80;
+
+// ─── DOM helpers ─────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function log(msg, cls='') {
+  const el   = $('serialLog');
+  const now  = performance.now() / 1000;
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-time">[${now.toFixed(2)}]</span><span class="log-msg ${cls}">${msg}</span>`;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+function clearLog(){ $('serialLog').innerHTML=''; log('Serial cleared','system'); }
+
+function setStateLabel(s, cls='') {
+  const el = $('stateLabel');
+  el.textContent = s;
+  el.className = 'state-val ' + cls;
+}
+
+// ─── Pump / Relay ────────────────────────────────────────
+function pumpOn() {
+  $('relayLed').classList.add('on');
+  $('relayIndicator').classList.add('on');
+  $('relayStatus').textContent = 'GPIO 26 → HIGH → Pump ON';
+  $('waterStream').classList.add('flowing');
+  log('[PUMP] ON','pump');
+}
+function pumpOff() {
+  $('relayLed').classList.remove('on');
+  $('relayIndicator').classList.remove('on');
+  $('relayStatus').textContent = 'GPIO 26 → LOW → Pump OFF';
+  $('waterStream').classList.remove('flowing');
+  log('[PUMP] OFF','pump');
+}
+
+// ─── Dispense ────────────────────────────────────────────
+function startDispense(ms, vol, reason) {
+  dispenseStart = performance.now();
+  dispenseEnd   = dispenseStart + ms;
+  dispenseVol   = vol;
+  state         = 'DISPENSING';
+  stateEnteredAt= performance.now();
+  pumpOn();
+  $('volumeLabel').textContent = vol + ' mL';
+  log(`[DISPENSE] ${reason} → ${vol} mL (${(ms/1000).toFixed(1)} s)`,'dispense');
+  setStateLabel('DISPENSING', 'running');
+  $('systemBadge').textContent = '● DISPENSING';
+  if (rafHandle) cancelAnimationFrame(rafHandle);
+  rafHandle = requestAnimationFrame(dispenseLoop);
+}
+
+function dispenseLoop(ts) {
+  if (state !== 'DISPENSING') return;
+  const elapsed  = ts - dispenseStart;
+  const total    = dispenseEnd - dispenseStart;
+  const pct      = Math.min(elapsed / total, 1);
+
+  $('progressFill').style.width = (pct * 100).toFixed(1) + '%';
+  $('progressPct').textContent   = Math.round(pct * 100) + '%';
+  $('elapsedLabel').textContent  = (elapsed / 1000).toFixed(1) + ' s';
+  $('remainLabel').textContent   = Math.max(0, Math.round(dispenseEnd - ts)) + ' ms';
+
+  // Fill cup animation
+  $('cupWater').style.height = (pct * 85).toFixed(1) + '%';
+
+  // Drain tank
+  const drainPct = (pct * dispenseVol / 1000) * 100;
+  const newTank  = Math.max(0, tankPct - drainPct * 0.25);
+  $('tankWater').style.height = newTank + '%';
+  $('tankPct').textContent    = Math.round(newTank) + '%';
+
+  if (ts >= dispenseEnd) {
+    finishDispense();
+    return;
+  }
+  rafHandle = requestAnimationFrame(dispenseLoop);
+}
+
+function finishDispense() {
+  pumpOff();
+  totalMl  += dispenseVol;
+  dispenses++;
+  $('statTotal').textContent    = totalMl;
+  $('statDispenses').textContent= dispenses;
+  $('statCups').textContent     = Math.round(totalMl / 250);
+  tankPct = parseFloat($('tankWater').style.height) || tankPct;
+
+  // Lock cup fill
+  $('progressFill').style.width = '100%';
+  $('progressPct').textContent  = '100%';
+  $('remainLabel').textContent  = '0 ms';
+
+  state         = 'COOLDOWN';
+  stateEnteredAt= performance.now();
+  setStateLabel('COOLDOWN', 'cooldown');
+  $('systemBadge').textContent = '● COOLDOWN';
+  log('[STATE] Cooldown (5 s)','state');
+
+  setTimeout(() => {
+    state = 'IDLE';
+    setStateLabel('IDLE','idle');
+    $('systemBadge').textContent = '● SYSTEM READY';
+    $('progressFill').style.width = '0%';
+    $('progressPct').textContent = '0%';
+    $('volumeLabel').textContent = '— mL';
+    $('elapsedLabel').textContent = '0.0 s';
+    $('remainLabel').textContent = '— ms';
+    // Drain cup
+    $('cupWater').style.height = '0%';
+    log('[STATE] Idle — ready','state');
+    irPresent = false;
+    $('irDot').classList.remove('active');
+    $('irHint').textContent = 'Click to simulate cup/glass presence (auto 300 mL)';
+  }, COOLDOWN_MS);
+}
+
+// ─── Touch ───────────────────────────────────────────────
+function handleTouch(e) {
+  if (state === 'DISPENSING' || state === 'COOLDOWN') return;
+  spawnRipple(e);
+  $('touchBtn').classList.add('tapped');
+  setTimeout(()=>$('touchBtn').classList.remove('tapped'), 200);
+
+  const now = performance.now();
+
+  if (state === 'WAIT_SECOND') {
+    clearTimeout(window._tapTimer);
+    log('[TOUCH] Second tap → 1 L','touch');
+    startDispense(DURATION_1000, 1000, 'Double Tap');
+    return;
+  }
+
+  // First tap
+  log('[TOUCH] First tap — waiting for second (500 ms)…','touch');
+  lastTouchTime = now;
+  state         = 'WAIT_SECOND';
+  stateEnteredAt= now;
+  $('touchHint').textContent = '⏳ TAP AGAIN WITHIN 500 ms FOR 1 L…';
+
+  window._tapTimer = setTimeout(() => {
+    if (state !== 'WAIT_SECOND') return;
+    log('[TOUCH] Single tap → 300 mL','touch');
+    startDispense(DURATION_300, 300, 'Single Tap');
+    $('touchHint').textContent = 'TAP ONCE = 300 mL · TAP TWICE = 1 L';
+  }, DOUBLE_TAP_WIN);
+}
+
+// ─── IR Sensor ───────────────────────────────────────────
+function toggleIR() {
+  if (state === 'DISPENSING' || state === 'COOLDOWN') return;
+  irPresent = !irPresent;
+  $('irDot').classList.toggle('active', irPresent);
+  $('cupEl').classList.toggle('present', irPresent);
+
+  if (irPresent) {
+    log('[IR] Object detected — stabilising…','ir');
+    $('irHint').textContent = `⏳ Stable for ${IR_STABLE_MS} ms then auto 300 mL…`;
+    irTimer = setTimeout(() => {
+      if (!irPresent || state !== 'IDLE') return;
+      log('[IR] Object stable → auto dispense 300 mL','ir');
+      startDispense(DURATION_300, 300, 'IR Auto');
+    }, IR_STABLE_MS);
+  } else {
+    clearTimeout(irTimer);
+    log('[IR] Object removed','ir');
+    $('irHint').textContent = 'Click to simulate cup/glass presence (auto 300 mL)';
+  }
+}
+
+// ─── Mode Selector ───────────────────────────────────────
+function selectMode(vol) {
+  $('card300').classList.toggle('active', vol === 300);
+  $('card1000').classList.toggle('active', vol === 1000);
+}
+
+// ─── Reset ───────────────────────────────────────────────
+function resetSim() {
+  if (rafHandle) cancelAnimationFrame(rafHandle);
+  clearTimeout(window._tapTimer);
+  clearTimeout(irTimer);
+  state         = 'IDLE';
+  irPresent     = false;
+  totalMl       = 0;
+  dispenses     = 0;
+  tankPct       = 80;
+  pumpOff();
+  setStateLabel('IDLE','idle');
+  $('systemBadge').textContent  = '● SYSTEM READY';
+  $('progressFill').style.width = '0%';
+  $('progressPct').textContent  = '0%';
+  $('volumeLabel').textContent  = '— mL';
+  $('elapsedLabel').textContent = '0.0 s';
+  $('remainLabel').textContent  = '— ms';
+  $('cupWater').style.height    = '0%';
+  $('tankWater').style.height   = '80%';
+  $('tankPct').textContent      = '80%';
+  $('irDot').classList.remove('active');
+  $('cupEl').classList.remove('present');
+  $('touchHint').textContent    = 'TAP ONCE = 300 mL · TAP TWICE = 1 L';
+  $('irHint').textContent       = 'Click to simulate cup/glass presence (auto 300 mL)';
+  $('statTotal').textContent    = '0';
+  $('statDispenses').textContent= '0';
+  $('statCups').textContent     = '0';
+  log('━━━ System Reset ━━━','system');
+}
+
+// ─── Ripple ──────────────────────────────────────────────
+function spawnRipple(e) {
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  r.style.left   = (e.clientX - 40) + 'px';
+  r.style.top    = (e.clientY - 40) + 'px';
+  r.style.width  = r.style.height = '80px';
+  $('rippleContainer').appendChild(r);
+  setTimeout(() => r.remove(), 600);
+}
+
+// ─── Boot ────────────────────────────────────────────────
+(function boot() {
+  log('===========================================','system');
+  log('  Smart Water Dispenser — ESP32 v1.0.0','system');
+  log('===========================================','system');
+  log(`  300 mL duration : ${DURATION_300} ms`,'system');
+  log(`  1000 mL duration: ${DURATION_1000} ms`,'system');
+  log('  Touch pin : GPIO 4  (TOUCH0)','system');
+  log('  IR pin    : GPIO 14 (INPUT_PULLUP)','system');
+  log('  Relay pin : GPIO 26 (OUTPUT)','system');
+  log('  Ready.','state');
+})();
+</script>
+</body>
+</html>
