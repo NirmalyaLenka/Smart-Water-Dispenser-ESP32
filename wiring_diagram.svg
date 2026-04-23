@@ -1,0 +1,172 @@
+<svg viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New', monospace">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4FC3F7"/>
+    </marker>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="620" fill="#0D1117" rx="12"/>
+  <rect width="900" height="620" fill="url(#bg)" rx="12" opacity="0.3"/>
+
+  <!-- Title -->
+  <text x="450" y="36" text-anchor="middle" fill="#4FC3F7" font-size="18" font-weight="bold" filter="url(#glow)">SMART WATER DISPENSER — WIRING DIAGRAM</text>
+  <text x="450" y="54" text-anchor="middle" fill="#546E7A" font-size="11">ESP32 + Relay + IR Sensor + Capacitive Touch</text>
+  <line x1="40" y1="64" x2="860" y2="64" stroke="#1E3A5F" stroke-width="1"/>
+
+  <!-- ═══ ESP32 CHIP ═══ -->
+  <rect x="340" y="90" width="220" height="320" rx="8" fill="#0A1628" stroke="#4FC3F7" stroke-width="2"/>
+  <rect x="340" y="90" width="220" height="28" rx="6" fill="#1565C0"/>
+  <text x="450" y="110" text-anchor="middle" fill="#E3F2FD" font-size="13" font-weight="bold">ESP32 Dev Module</text>
+
+  <!-- Left pins -->
+  <text x="352" y="145" fill="#90CAF9" font-size="9">GPIO 4 (TOUCH0)</text>
+  <circle cx="342" cy="141" r="4" fill="#4FC3F7"/>
+
+  <text x="352" y="185" fill="#90CAF9" font-size="9">GPIO 14</text>
+  <circle cx="342" cy="181" r="4" fill="#4FC3F7"/>
+
+  <text x="352" y="225" fill="#90CAF9" font-size="9">GPIO 26</text>
+  <circle cx="342" cy="221" r="4" fill="#4FC3F7"/>
+
+  <text x="352" y="265" fill="#90CAF9" font-size="9">GPIO 2 (LED)</text>
+  <circle cx="342" cy="261" r="4" fill="#4FC3F7"/>
+
+  <text x="352" y="305" fill="#A5D6A7" font-size="9">3.3V</text>
+  <circle cx="342" cy="301" r="4" fill="#66BB6A"/>
+
+  <text x="352" y="345" fill="#EF9A9A" font-size="9">GND</text>
+  <circle cx="342" cy="341" r="4" fill="#EF5350"/>
+
+  <text x="352" y="385" fill="#FFCC80" font-size="9">Vin (5V)</text>
+  <circle cx="342" cy="381" r="4" fill="#FFA726"/>
+
+  <!-- Right pins -->
+  <circle cx="558" cy="141" r="4" fill="#4FC3F7"/>
+  <circle cx="558" cy="181" r="4" fill="#4FC3F7"/>
+
+  <!-- ESP32 chip visual -->
+  <rect x="390" y="160" width="120" height="80" rx="4" fill="#112233" stroke="#263238"/>
+  <text x="450" y="197" text-anchor="middle" fill="#37474F" font-size="9">Xtensa LX6</text>
+  <text x="450" y="212" text-anchor="middle" fill="#37474F" font-size="9">Dual Core 240MHz</text>
+  <text x="450" y="227" text-anchor="middle" fill="#37474F" font-size="9">WiFi + BT</text>
+
+  <!-- ═══ TOUCH SENSOR ═══ -->
+  <rect x="40" y="105" width="150" height="80" rx="6" fill="#0A1628" stroke="#F48FB1" stroke-width="1.5"/>
+  <text x="115" y="126" text-anchor="middle" fill="#F48FB1" font-size="11" font-weight="bold">Touch Sensor</text>
+  <text x="115" y="143" text-anchor="middle" fill="#546E7A" font-size="9">Capacitive Pad</text>
+  <rect x="65" y="150" width="100" height="22" rx="3" fill="#1A0A1E" stroke="#F48FB1" stroke-width="1"/>
+  <text x="115" y="165" text-anchor="middle" fill="#F48FB1" font-size="9">GPIO 4 / TOUCH0</text>
+  <!-- Pin -->
+  <circle cx="190" cy="160" r="4" fill="#F48FB1"/>
+  <!-- Wire: Touch → ESP32 GPIO4 -->
+  <path d="M190,160 L220,160 L220,141 L342,141" stroke="#F48FB1" stroke-width="2" fill="none" stroke-dasharray="6,3"/>
+  <text x="240" y="136" fill="#F48FB1" font-size="8">Signal</text>
+
+  <!-- ═══ IR SENSOR ═══ -->
+  <rect x="40" y="220" width="150" height="100" rx="6" fill="#0A1628" stroke="#CE93D8" stroke-width="1.5"/>
+  <text x="115" y="240" text-anchor="middle" fill="#CE93D8" font-size="11" font-weight="bold">IR Sensor FC-51</text>
+  <text x="115" y="255" text-anchor="middle" fill="#546E7A" font-size="9">Obstacle / Proximity</text>
+  <!-- Pins on module -->
+  <rect x="58" y="262" width="30" height="16" rx="2" fill="#1A0010" stroke="#CE93D8"/>
+  <text x="73" y="274" text-anchor="middle" fill="#CE93D8" font-size="7">VCC</text>
+  <rect x="95" y="262" width="30" height="16" rx="2" fill="#1A0010" stroke="#CE93D8"/>
+  <text x="110" y="274" text-anchor="middle" fill="#CE93D8" font-size="7">GND</text>
+  <rect x="132" y="262" width="30" height="16" rx="2" fill="#1A0010" stroke="#CE93D8"/>
+  <text x="147" y="274" text-anchor="middle" fill="#CE93D8" font-size="7">OUT</text>
+  <!-- Wires -->
+  <circle cx="190" cy="270" r="4" fill="#CE93D8"/>
+  <path d="M162,270 L190,270 L270,270 L270,181 L342,181" stroke="#CE93D8" stroke-width="2" fill="none" stroke-dasharray="6,3"/>
+  <text x="200" y="265" fill="#CE93D8" font-size="8">OUT→GPIO14</text>
+  <!-- VCC wire -->
+  <path d="M73,262 L73,245 L20,245 L20,310 L260,310 L260,301 L342,301" stroke="#66BB6A" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+  <!-- GND wire -->
+  <path d="M110,262 L110,248 L16,248 L16,350 L265,350 L265,341 L342,341" stroke="#EF5350" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+
+  <!-- ═══ RELAY MODULE ═══ -->
+  <rect x="660" y="90" width="180" height="130" rx="6" fill="#0A1628" stroke="#FFD54F" stroke-width="1.5"/>
+  <text x="750" y="112" text-anchor="middle" fill="#FFD54F" font-size="11" font-weight="bold">Relay Module</text>
+  <text x="750" y="127" text-anchor="middle" fill="#546E7A" font-size="9">5V 1-Channel Optocoupler</text>
+  <!-- Relay coil side pins -->
+  <rect x="676" y="135" width="35" height="16" rx="2" fill="#1A1000" stroke="#FFD54F"/>
+  <text x="694" y="147" text-anchor="middle" fill="#FFD54F" font-size="7">VCC</text>
+  <rect x="716" y="135" width="35" height="16" rx="2" fill="#1A1000" stroke="#FFD54F"/>
+  <text x="734" y="147" text-anchor="middle" fill="#FFD54F" font-size="7">GND</text>
+  <rect x="756" y="135" width="35" height="16" rx="2" fill="#1A1000" stroke="#FFD54F"/>
+  <text x="774" y="147" text-anchor="middle" fill="#FFD54F" font-size="7">IN</text>
+  <!-- Relay switch side pins -->
+  <rect x="676" y="175" width="35" height="16" rx="2" fill="#1A1000" stroke="#FF8F00"/>
+  <text x="694" y="187" text-anchor="middle" fill="#FF8F00" font-size="7">COM</text>
+  <rect x="716" y="175" width="35" height="16" rx="2" fill="#1A1000" stroke="#66BB6A"/>
+  <text x="734" y="187" text-anchor="middle" fill="#66BB6A" font-size="7">NO</text>
+  <rect x="756" y="175" width="35" height="16" rx="2" fill="#1A1000" stroke="#EF5350"/>
+  <text x="774" y="187" text-anchor="middle" fill="#EF5350" font-size="7">NC</text>
+  <!-- Relay coil symbol -->
+  <rect x="700" y="200" width="100" height="15" rx="2" fill="#1A1000" stroke="#FFD54F" stroke-width="1"/>
+  <text x="750" y="212" text-anchor="middle" fill="#546E7A" font-size="8">⬛ RELAY COIL</text>
+  <!-- Wires to ESP32 -->
+  <path d="M660,147 L600,147 L600,221 L558,221" stroke="#FFD54F" stroke-width="2" fill="none" stroke-dasharray="6,3"/>
+  <text x="590" y="143" fill="#FFD54F" font-size="8">IN←GPIO26</text>
+  <!-- VCC from Vin -->
+  <path d="M694,135 L694,120 L640,120 L640,390 L610,390 L610,381 L558,381" stroke="#FFA726" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+  <!-- GND relay -->
+  <path d="M734,135 L734,118 L636,118 L636,355 L606,355 L606,341 L558,341" stroke="#EF5350" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+
+  <!-- ═══ WATER PUMP ═══ -->
+  <rect x="660" y="260" width="180" height="100" rx="6" fill="#0A1628" stroke="#4DB6AC" stroke-width="1.5"/>
+  <text x="750" y="281" text-anchor="middle" fill="#4DB6AC" font-size="11" font-weight="bold">Water Pump</text>
+  <text x="750" y="296" text-anchor="middle" fill="#546E7A" font-size="9">5V DC · 1 L / 19 s</text>
+  <text x="750" y="313" text-anchor="middle" fill="#546E7A" font-size="9">≈ 52.6 mL/s</text>
+  <!-- Pump terminals -->
+  <rect x="696" y="325" width="40" height="18" rx="2" fill="#0A1A18" stroke="#4DB6AC"/>
+  <text x="716" y="338" text-anchor="middle" fill="#4DB6AC" font-size="8">+ (Red)</text>
+  <rect x="744" y="325" width="40" height="18" rx="2" fill="#0A1A18" stroke="#EF5350"/>
+  <text x="764" y="338" text-anchor="middle" fill="#EF5350" font-size="8">– (Blk)</text>
+  <!-- Wire: Relay NO → Pump+ -->
+  <path d="M734,191 L734,210 L810,210 L810,250 L716,250 L716,325" stroke="#66BB6A" stroke-width="2" fill="none"/>
+  <!-- Wire: Relay COM → PSU+ -->
+  <path d="M694,191 L694,208 L860,208 L860,540 L800,540" stroke="#FF8F00" stroke-width="2" fill="none"/>
+  <!-- Wire: Pump– → PSU GND -->
+  <path d="M764,343 L764,380 L860,380 L860,555 L800,555" stroke="#EF5350" stroke-width="2" fill="none"/>
+
+  <!-- ═══ POWER SUPPLY ═══ -->
+  <rect x="620" y="520" width="190" height="70" rx="6" fill="#0A1628" stroke="#FFAB40" stroke-width="1.5"/>
+  <text x="715" y="542" text-anchor="middle" fill="#FFAB40" font-size="11" font-weight="bold">Power Supply</text>
+  <text x="715" y="557" text-anchor="middle" fill="#546E7A" font-size="9">5V 2A (pump rail)</text>
+  <rect x="636" y="563" width="35" height="16" rx="2" fill="#1A0A00" stroke="#FF8F00"/>
+  <text x="654" y="575" text-anchor="middle" fill="#FF8F00" font-size="7">+5V</text>
+  <rect x="678" y="563" width="35" height="16" rx="2" fill="#1A0A00" stroke="#EF5350"/>
+  <text x="696" y="575" text-anchor="middle" fill="#EF5350" font-size="7">GND</text>
+
+  <!-- ═══ STATUS LED ═══ -->
+  <rect x="40" y="370" width="150" height="70" rx="6" fill="#0A1628" stroke="#80CBC4" stroke-width="1.5"/>
+  <text x="115" y="391" text-anchor="middle" fill="#80CBC4" font-size="11" font-weight="bold">Status LED</text>
+  <text x="115" y="406" text-anchor="middle" fill="#546E7A" font-size="9">Built-in GPIO 2</text>
+  <text x="115" y="421" text-anchor="middle" fill="#546E7A" font-size="9">ON = Dispensing</text>
+
+  <!-- ═══ LEGEND ═══ -->
+  <rect x="40" y="480" width="280" height="115" rx="6" fill="#050B15" stroke="#263238" stroke-width="1"/>
+  <text x="55" y="500" fill="#90A4AE" font-size="10" font-weight="bold">WIRE LEGEND</text>
+  <line x1="55" y1="512" x2="110" y2="512" stroke="#F48FB1" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="118" y="516" fill="#F48FB1" font-size="9">Touch signal</text>
+  <line x1="55" y1="528" x2="110" y2="528" stroke="#CE93D8" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="118" y="532" fill="#CE93D8" font-size="9">IR sensor signal (OUT)</text>
+  <line x1="55" y1="544" x2="110" y2="544" stroke="#FFD54F" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="118" y="548" fill="#FFD54F" font-size="9">Relay control (GPIO 26)</text>
+  <line x1="55" y1="560" x2="110" y2="560" stroke="#66BB6A" stroke-width="2"/>
+  <text x="118" y="564" fill="#66BB6A" font-size="9">3.3V / Relay NO → Pump+</text>
+  <line x1="55" y1="576" x2="110" y2="576" stroke="#EF5350" stroke-width="2"/>
+  <text x="118" y="580" fill="#EF5350" font-size="9">GND (common)</text>
+
+  <!-- ═══ NOTES ═══ -->
+  <rect x="350" y="445" width="530" height="80" rx="6" fill="#050B15" stroke="#263238" stroke-width="1"/>
+  <text x="365" y="464" fill="#90A4AE" font-size="10" font-weight="bold">CALIBRATION NOTES</text>
+  <text x="365" y="480" fill="#546E7A" font-size="9">• 300 mL = 5 700 ms pump runtime  (300 / 52.63 mL·s⁻¹)</text>
+  <text x="365" y="494" fill="#546E7A" font-size="9">• 1000 mL = 19 000 ms pump runtime (exact calibration)</text>
+  <text x="365" y="508" fill="#546E7A" font-size="9">• Update config.h if your pump flow rate differs</text>
+  <text x="365" y="522" fill="#37474F" font-size="9">• Relay NO = Normally Open — pump OFF by default (safe)</text>
+</svg>
