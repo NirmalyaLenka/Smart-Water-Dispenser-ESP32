@@ -234,6 +234,16 @@ Built with ❤️ using ESP32 Arduino Core.
 
 ---
 
+## Skills & technologies
+
+`Arduino/C++` · `C/C++` · `HTML/CSS`
+
+
+## How it works
+
+The main firmware sketch is `smart_water_dispenser.ino`. Open it in Arduino IDE, verify the board, pin mapping and library requirements, then compile and upload. Test hardware behaviour on the real circuit before relying on it.
+
+
 ## Maintenance & Audit
 
 - **Audit date:** 10 November 2026
