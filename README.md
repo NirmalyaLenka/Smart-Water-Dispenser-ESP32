@@ -1,253 +1,111 @@
-# 💧 Smart Water Dispenser — ESP32
+# Smart Water Dispenser — ESP32
 
-> Capacitive-touch + IR-proximity water dispenser with relay-controlled pump.  
-> Single tap = 300 mL · Double tap = 1 L · Auto IR = 300 mL
+A prototype water dispenser controller using the ESP32's capacitive-touch input, an active-low IR proximity sensor, and a relay-controlled DC pump. Pump run time is estimated from a calibration value; there is no flow meter in the current firmware.
 
----
+## Current behavior
 
-## Table of Contents
-- [Features](#features)
-- [Hardware Requirements](#hardware-requirements)
-- [Wiring Diagram](#wiring-diagram)
-- [Pin Reference](#pin-reference)
-- [Flow Logic](#flow-logic)
-- [Pump Calibration](#pump-calibration)
-- [Getting Started](#getting-started)
-- [Project Structure](#project-structure)
-- [Configuration](#configuration)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
+| Input | Firmware behavior |
+|---|---|
+| One touch, with no second touch inside the 500 ms window | Run the pump for an estimated 300 mL |
+| Second touch inside the 500 ms window | Run the pump for an estimated 1 L |
+| IR output remains LOW for about 800 ms while idle | Run the pump for an estimated 300 mL |
+| Dispense finishes | Switch pump off and wait through a 5 s cooldown |
 
----
+The pump is controlled with **GPIO 26 HIGH = ON** and LOW = OFF. GPIO 2 is used as the status LED. The volumes are estimates derived from the configured pump rate, not measured delivery amounts.
 
-## Features
+## Hardware and pinout
 
-| Mode | Trigger | Volume |
-|------|---------|--------|
-| Single tap | 1× touch on sensor | 300 mL |
-| Double tap | 2× touch within 500 ms | 1000 mL (1 L) |
-| Auto (IR) | Object held in front of IR sensor | 300 mL |
+| ESP32 pin | Connection | Notes |
+|---|---|---|
+| GPIO 4 / touch channel T0 | Touch pad | Capacitive touch input |
+| GPIO 14 | IR sensor OUT | Active LOW; firmware uses `INPUT_PULLUP` |
+| GPIO 26 | Relay IN | Firmware assumes active-HIGH relay input |
+| GPIO 2 | Status LED | Built-in LED on supported boards |
+| GND | Sensor/logic ground | Follow the wiring diagram and relay module requirements |
 
-- ⚡ ESP32 capacitive touch — **no mechanical button**
-- 🔍 IR proximity sensor auto-detects cup/bottle
-- 🔌 Relay module safely switches pump (mains or high-current DC)
-- ⏱️ Precise time-based volume control (calibrated to your pump)
-- 🔒 Post-dispense cooldown prevents accidental re-trigger
+See [`hardware/wiring_diagram.svg`](hardware/wiring_diagram.svg) and [`state_machine.md`](state_machine.md). The repository also has a root-level `wiring_diagram.svg` and duplicate BOM files; they have been left in place.
 
----
+### Safety before powering
 
-## Hardware Requirements
+- This documentation is for a **low-voltage DC pump prototype**. Do not use the project to switch mains voltage.
+- Keep water, tubing, and wet hands away from the ESP32, USB connector, and exposed wiring. Use an enclosure and suitable strain relief for any real installation.
+- Use a separate, correctly rated pump supply where required by the pump; check the relay contact rating, startup current, polarity, and wiring against the actual modules.
+- Verify relay OFF behavior with the pump disconnected first. Then test with water in a container, watch for leaks, and never run a pump dry unless its datasheet permits it.
+- Time-based dispensing can overfill or underfill when supply voltage, head height, tubing, or pump condition changes. Do not use it for a safety-critical or hygienic dispensing application without independent safeguards.
 
-| Component | Specification |
-|-----------|--------------|
-| Microcontroller | ESP32 Dev Module (any 38-pin variant) |
-| Water Pump | 5 V / 12 V mini submersible or peristaltic (1 L / 19 s) |
-| Relay Module | 5 V, 1-channel, optocoupler isolated |
-| Touch Sensor | Capacitive pad wired to ESP32 GPIO 4 (TOUCH0) |
-| IR Sensor | FC-51 or equivalent (active-LOW digital output) |
-| Power Supply | 5 V 2 A for ESP32 + relay logic; separate rail for pump |
+## Software prerequisites
 
----
+- Arduino IDE 2.x.
+- The **ESP32 by Espressif Systems** board package.
+- USB data cable and the correct serial port.
 
-## Wiring Diagram
+The current sketch includes only Arduino/ESP32 core headers; no third-party library is referenced in `smart_water_dispenser.ino`. A `platformio.ini` is not present, so this README does not claim a working PlatformIO build path.
 
-See [`hardware/wiring_diagram.svg`](hardware/wiring_diagram.svg) for the full schematic.
+## Build and upload
 
-```
-ESP32                      Peripherals
-─────────────────────────────────────────────
-GPIO 4  (TOUCH0) ──────── Touch Pad (copper foil or dedicated module)
-GPIO 14          ──────── IR Sensor OUT  (pull-up via INPUT_PULLUP)
-GPIO 26          ──────── Relay IN
-GPIO 2  (LED)    ──────── Built-in LED (status indicator)
-GND              ──────── IR GND, Relay GND, common ground
-3.3 V            ──────── IR VCC
-5 V (Vin)        ──────── Relay VCC
+1. Review the BOM and wiring diagram before connecting the pump.
+2. Open the root-level `smart_water_dispenser.ino` in Arduino IDE.
+3. Select the matching ESP32 board (the sketch header names **ESP32 Dev Module**) and the correct serial port.
+4. Compile and upload through USB.
+5. Open Serial Monitor at **115200 baud**.
+6. With the pump disconnected, confirm startup messages and that the relay output is OFF. Test touch and IR triggers before connecting the pump.
+7. Calibrate dispensing into a graduated container, then repeat tests for single touch, double touch, IR trigger, and cooldown.
 
-Relay COM ─── Pump +V supply
-Relay NO  ─── Pump + terminal
-Pump –    ─── Power Supply GND
-```
+No firmware build or physical test was performed during this documentation update.
 
----
+## Calibration and settings
 
-## Pin Reference
+The current firmware keeps its operational constants directly in `smart_water_dispenser.ino`:
 
-| GPIO | Function | Mode | Notes |
-|------|----------|------|-------|
-| 4 | Touch sensor | INPUT (capacitive) | `touchRead()` — threshold < 40 |
-| 14 | IR sensor OUT | INPUT_PULLUP | LOW = object present |
-| 26 | Relay IN | OUTPUT | HIGH = pump ON |
-| 2 | Status LED | OUTPUT | Built-in; ON during dispense |
+| Setting in sketch | Current value | Meaning |
+|---|---:|---|
+| `TOUCH_THRESHOLD` | 40 | Touch readings below this value count as touched |
+| `DOUBLE_TAP_WINDOW` | 500 ms | Time allowed for the second tap |
+| `IR_STABLE_MS` | 800 ms | Required stable IR detection |
+| `IR_COOLDOWN_MS` | 5000 ms | Post-dispense cooldown |
+| `DURATION_300` | about 5700 ms | Estimated 300 mL pump run time |
+| `DURATION_1000` | 19000 ms | Estimated 1 L pump run time |
 
----
+**Important configuration limitation:** `config.h` contains matching, user-facing settings, but the current `.ino` does not include that header; it hardcodes the values above. Editing `config.h` alone will not change firmware behavior. The header and sketch have not been refactored in this documentation-only pass.
 
-## Flow Logic
+To calibrate volume, collect and measure the pump output for a known duration, calculate the actual flow rate, and adjust the constants in the sketch deliberately. Re-test both dispense modes after any adjustment.
 
-```
-            ┌─────────┐
-            │  IDLE   │
-            └────┬────┘
-                 │
-     ┌───────────┼───────────┐
-     ▼           ▼           ▼
-  Touch?       Touch?      IR stable
- (rising)    (rising)    (800 ms)?
-     │            │           │
-     ▼            │           ▼
-WAIT_2ND_TAP      │       Dispense
- (500 ms window)  │       300 mL
-     │            │
- 2nd tap?    No 2nd tap?
-     │            │
-     ▼            ▼
-Dispense      Dispense
- 1000 mL       300 mL
-     │            │
-     └──────┬─────┘
-            ▼
-       DISPENSING
-       (timed run)
-            │
-            ▼
-        COOLDOWN
-        (5 000 ms)
-            │
-            ▼
-          IDLE
-```
+## Project files
 
----
-
-## Pump Calibration
-
-The firmware uses **time-based** volume control:
-
-```
-mL/ms = PUMP_CALIBRATION_ML / PUMP_CALIBRATION_MS
-      = 1000 mL / 19 000 ms
-      ≈ 0.05263 mL/ms
-
-Duration for 300 mL = 300 / 0.05263 ≈ 5 700 ms
-Duration for 1 L    = 19 000 ms (exact)
-```
-
-To recalibrate for your pump:
-1. Run the pump into a measuring cup for exactly 10 seconds.
-2. Note the volume in mL.
-3. Update `config.h`:
-   ```c
-   #define PUMP_CALIBRATION_ML   <your_ml>
-   #define PUMP_CALIBRATION_MS   10000UL
-   ```
-
----
-
-## Getting Started
-
-### Prerequisites
-- [Arduino IDE 2.x](https://www.arduino.cc/en/software) **or** [PlatformIO](https://platformio.org/)
-- ESP32 board package: `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
-
-### Flash
-
-```bash
-# Arduino IDE
-# 1. Board  → ESP32 Dev Module
-# 2. Upload Speed → 115200
-# 3. Open firmware/smart_water_dispenser.ino
-# 4. Click Upload
-
-# PlatformIO (CLI)
-pio run --target upload --upload-port /dev/ttyUSB0
-```
-
-### Serial Monitor
-Open at **115200 baud** to see real-time pump events:
-```
-[TOUCH] First tap detected — waiting for second...
-[TOUCH] Single tap — dispense 300 mL
-[DISPENSE] Single Tap → 300 mL (5.7 s)
-[PUMP] ON
-[PUMP] OFF
-[STATE] Cooldown
-[STATE] Idle — ready
-```
-
----
-
-## Project Structure
-
-```
-smart-water-dispenser/
-├── firmware/
-│   ├── smart_water_dispenser.ino   # Main ESP32 sketch
-│   └── config.h                    # All tunable constants
-├── hardware/
-│   ├── wiring_diagram.svg          # Schematic / wiring diagram
-│   └── BOM.md                      # Bill of Materials
-├── docs/
-│   └── state_machine.md            # Detailed state machine documentation
-├── demo/
-│   └── index.html                  # Interactive web demonstration
-├── README.md
-└── LICENSE
-```
-
----
-
-## Configuration
-
-All user-tunable constants live in `firmware/config.h`:
-
-| Constant | Default | Description |
-|----------|---------|-------------|
-| `TOUCH_THRESHOLD_VALUE` | 40 | Capacitive reading below which = touched |
-| `DOUBLE_TAP_WINDOW_MS` | 500 | Max ms between two taps to count as double |
-| `IR_STABLE_DELAY_MS` | 800 | How long object must be present before auto-dispense |
-| `POST_DISPENSE_COOLDOWN_MS` | 5000 | Cooldown after dispense before IR re-arms |
-| `PUMP_CALIBRATION_ML` | 1000 | Known volume for calibration |
-| `PUMP_CALIBRATION_MS` | 19000 | Time to deliver calibration volume |
-| `RELAY_ACTIVE_STATE` | HIGH | Change to LOW for active-LOW relay boards |
-
----
+| Path | Purpose |
+|---|---|
+| `smart_water_dispenser.ino` | ESP32 firmware and state machine |
+| `config.h` | Intended user settings; currently not included by the sketch |
+| `BOM.md` | Root-level bill of materials |
+| `hardware/BOM.md` | Duplicate BOM copy |
+| `hardware/wiring_diagram.svg` | Wiring illustration |
+| `wiring_diagram.svg` | Root-level duplicate wiring illustration |
+| `state_machine.md` | State and timing explanation |
+| `index.html` | Browser demonstration; does not control physical hardware |
+| `LICENSE` | Project license |
 
 ## Troubleshooting
 
-| Symptom | Likely Cause | Fix |
-|---------|-------------|-----|
-| Touch never fires | Threshold too high | Lower `TOUCH_THRESHOLD_VALUE` in config.h |
-| Double tap never triggers 1 L | Tapping too slow | Increase `DOUBLE_TAP_WINDOW_MS` to 700 |
-| IR auto-dispenses in empty space | IR sensitivity too high | Adjust pot on FC-51 module |
-| Pump runs too long / too short | Wrong calibration | Re-measure pump and update config.h |
-| Relay chatters | Power supply noise | Add 100 µF cap across relay coil |
-| ESP32 resets during pump start | Insufficient current | Use separate 5 V rail for relay/pump |
+- **Touch input is unreliable:** compare raw touch readings in a temporary diagnostic sketch and adjust the threshold carefully.
+- **IR triggers constantly:** check sensor polarity, wiring, and the module's sensitivity adjustment.
+- **Relay logic is inverted:** the current firmware assumes active-HIGH; verify the exact relay board before connecting the pump.
+- **ESP32 resets when the pump starts:** check pump startup current, supply capacity, grounding/relay wiring, and transient suppression appropriate to the load.
+- **Delivered volume is wrong:** recalibrate using measured output; the firmware has no flow feedback.
+- **Pump will not stop:** disconnect its power immediately and inspect relay wiring before further testing.
 
----
+## Limitations and verification
+
+- No flow sensor, closed-loop volume control, leak detection, or independent overfill cutoff is implemented.
+- `config.h` is not wired into the current sketch.
+- The browser page is a demo only; it is not a connected control dashboard.
+- Documentation was checked against the current sketch, configuration header, BOM, and state-machine notes. Compilation and hardware behavior remain unverified.
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for full text.  
-Built with ❤️ using ESP32 Arduino Core.
-2
+See [`LICENSE`](LICENSE).
 
-
----
-
-## Skills & technologies
-
-`Arduino/C++` · `C/C++` · `HTML/CSS`
-
-
-## How it works
-
-The main firmware sketch is `smart_water_dispenser.ino`. Open it in Arduino IDE, verify the board, pin mapping and library requirements, then compile and upload. Test hardware behaviour on the real circuit before relying on it.
-
-
-## Maintenance & Audit
+## Maintenance & audit
 
 - **Audit date:** 11 November 2026
-- **Documentation status:** README reviewed and audit record added on this date.
-- **Scope and evidence:** This is a documentation-level maintenance pass. It does not establish that source code compiles, dependencies are current, security has been tested, or hardware/runtime behavior has been verified.
-- **Code and tests:** No new functional code changes or test results are claimed by this README update. Run project-specific build, test, and hardware/runtime checks before relying on the project.
-- **Maintenance baseline:** Documentation status recorded through 11 November 2026; revisit setup instructions, dependencies, known limitations, and tests when the project changes.
+- **Scope:** documentation-only review; firmware, pins, and hardware behavior were not changed.
+- **Verification:** build and physical operation were not tested.
