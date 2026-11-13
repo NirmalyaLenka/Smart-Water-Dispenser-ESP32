@@ -106,6 +106,6 @@ See [`LICENSE`](LICENSE).
 
 ## Maintenance & audit
 
-- **Audit date:** 11 November 2026
+- **Audit date:** 13 November 2026
 - **Scope:** documentation-only review; firmware, pins, and hardware behavior were not changed.
 - **Verification:** build and physical operation were not tested.
